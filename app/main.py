@@ -297,6 +297,9 @@ def site_management_page(site):
     """Main site management page"""
     st.title(f"📝 {site['username']}'s SecureText Vault")
     
+    # Add main content anchor for accessibility
+    st.markdown('<div id="main-content"></div>', unsafe_allow_html=True)
+    
     # Check for session timeout (30 minutes of inactivity)
     SESSION_TIMEOUT_MINUTES = 30
     if 'last_activity' in st.session_state:
@@ -332,6 +335,8 @@ def site_management_page(site):
         st.session_state['last_activity'] = datetime.now()  # Session timeout tracking
     if 'last_auto_save_time' not in st.session_state:
         st.session_state['last_auto_save_time'] = datetime.now()  # Auto-save tracking
+    if 'editor_mode' not in st.session_state:
+        st.session_state['editor_mode'] = 'plain'  # Default to plain text mode
     
     # Sidebar for site management
     with st.sidebar:
@@ -374,6 +379,11 @@ def site_management_page(site):
                 background-color: #2d3142;
                 color: #ffffff;
             }
+            .warning {
+                background-color: #332e14;
+                border: 1px solid #665c28;
+                color: #fff3cd;
+            }
             </style>
             """, unsafe_allow_html=True)
         else:
@@ -399,6 +409,11 @@ def site_management_page(site):
             .stSelectbox > div > div {
                 background-color: #ffffff;
                 color: #000000;
+            }
+            .warning {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                color: #856404;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -431,7 +446,8 @@ def site_management_page(site):
                 "Select Tab",
                 tab_names,
                 index=current_tab_index,
-                key=f"tab_selector_{site['id']}"  # Add key to ensure proper re-rendering
+                key=f"tab_selector_{site['id']}",  # Add key to ensure proper re-rendering
+                help="Select a tab to view or edit its content"
             )
             
             # Find the selected tab
@@ -442,14 +458,14 @@ def site_management_page(site):
             if selected_tab:
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("✏️ Rename"):
+                    if st.button("✏️ Rename", help="Rename the current tab"):
                         st.session_state['rename_tab_id'] = selected_tab['id']
                         st.session_state['rename_tab_name'] = selected_tab['tab_name']
                 
                 with col2:
                     # Prevent deletion of the last tab
                     if len(tabs) > 1:
-                        if st.button("🗑️ Delete"):
+                        if st.button("🗑️ Delete", help="Delete the current tab"):
                             st.session_state['delete_tab_id'] = selected_tab['id']
                             st.session_state['delete_tab_name'] = selected_tab['tab_name']
                     else:
@@ -457,13 +473,13 @@ def site_management_page(site):
             
             # Create new tab button
             if len(tabs) < MAX_TABS_PER_SITE:
-                if st.button("➕ New Tab"):
+                if st.button("➕ New Tab", help="Create a new tab for organizing your content"):
                     st.session_state['show_new_tab_form'] = True
             
             # Show new tab form if requested
             if st.session_state['show_new_tab_form']:
                 with st.form("new_tab_form", clear_on_submit=True):  # Add clear_on_submit
-                    new_tab_name = st.text_input("Tab Name", placeholder="Enter tab name", max_chars=MAX_TAB_NAME_LENGTH, key="new_tab_name_input")
+                    new_tab_name = st.text_input("Tab Name", placeholder="Enter tab name", max_chars=MAX_TAB_NAME_LENGTH, key="new_tab_name_input", help="Enter a name for your new tab")
                     col1, col2 = st.columns(2)
                     with col1:
                         create_clicked = st.form_submit_button("Create")
@@ -503,7 +519,7 @@ def site_management_page(site):
             # Handle tab renaming
             if 'rename_tab_id' in st.session_state and st.session_state['rename_tab_id']:
                 with st.form("rename_tab_form"):
-                    new_name = st.text_input("New Tab Name", value=st.session_state['rename_tab_name'], max_chars=MAX_TAB_NAME_LENGTH)
+                    new_name = st.text_input("New Tab Name", value=st.session_state['rename_tab_name'], max_chars=MAX_TAB_NAME_LENGTH, help="Enter a new name for the tab")
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.form_submit_button("Update Name"):
@@ -580,7 +596,7 @@ def site_management_page(site):
             # Create first tab
             st.info("No tabs yet. Create your first tab below.")
             with st.form("first_tab_form", clear_on_submit=True):  # Add clear_on_submit
-                new_tab_name = st.text_input("First Tab Name", value=DEFAULT_TAB_NAME, max_chars=MAX_TAB_NAME_LENGTH, key="first_tab_name_input")
+                new_tab_name = st.text_input("First Tab Name", value=DEFAULT_TAB_NAME, max_chars=MAX_TAB_NAME_LENGTH, key="first_tab_name_input", help="Enter a name for your first tab")
                 create_clicked = st.form_submit_button("Create First Tab")
                 
                 if create_clicked and new_tab_name:
@@ -607,11 +623,11 @@ def site_management_page(site):
         
         # Export options
         st.subheader("📤 Import/Export")
-        export_format = st.selectbox("Export Format", options=list(EXPORT_OPTIONS.keys()), format_func=lambda x: EXPORT_OPTIONS[x])
+        export_format = st.selectbox("Export Format", options=list(EXPORT_OPTIONS.keys()), format_func=lambda x: EXPORT_OPTIONS[x], help="Select the format for exporting your content")
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("📥 Export Content"):
+            if st.button("📥 Export Content", help="Export the content of the current tab"):
                 if st.session_state['current_tab']:
                     # Get the appropriate content (decrypted if necessary)
                     if st.session_state['current_tab'].get('encrypted_content'):
@@ -638,7 +654,7 @@ def site_management_page(site):
                     st.warning("Select a tab to export")
         
         with col2:
-            uploaded_file = st.file_uploader("Import File", type=["txt", "md"])
+            uploaded_file = st.file_uploader("Import File", type=["txt", "md"], help="Upload a file to import its content into the current tab")
             if uploaded_file is not None:
                 try:
                     # Read the file content
@@ -709,7 +725,7 @@ def site_management_page(site):
             st.write("No statistics available yet.")
         
         # Logout button
-        if st.button("🚪 Logout"):
+        if st.button("🚪 Logout", help="Sign out of your SecureText Vault"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -720,8 +736,20 @@ def site_management_page(site):
         
         st.header(f"📄 {tab['tab_name']}")
         
+        # Editor mode toggle
+        editor_mode = st.radio(
+            "Editor Mode",
+            options=['Plain Text', 'Markdown'],
+            horizontal=True,
+            key=f"editor_mode_{tab['id']}",
+            help="Switch between plain text and Markdown editing modes"
+        )
+        
+        # Set editor mode in session state
+        st.session_state['editor_mode'] = 'markdown' if editor_mode == 'Markdown' else 'plain'
+        
         # Search functionality
-        search_term = st.text_input("🔍 Search in content", placeholder="Enter text to search...", key=f"search_{tab['id']}")
+        search_term = st.text_input("🔍 Search in content", placeholder="Enter text to search...", key=f"search_{tab['id']}", help="Search for text within the current tab content")
         
         # Get the appropriate content (decrypted if necessary)
         if tab.get('encrypted_content'):
@@ -729,14 +757,41 @@ def site_management_page(site):
         else:
             content = tab.get('content', '')
         
-        # Content editor
-        content = st.text_area(
-            "Content",
-            value=content,
-            height=400,
-            placeholder="Start typing your secure notes here...",
-            key=f"editor_{tab['id']}"
-        )
+        # Content editor based on mode
+        if st.session_state['editor_mode'] == 'markdown':
+            # Split the layout for markdown editor and preview
+            editor_col, preview_col = st.columns(2)
+            
+            with editor_col:
+                st.subheader("📝 Editor")
+                content = st.text_area(
+                    "Content",
+                    value=content,
+                    height=400,
+                    placeholder="Start typing your secure notes here in Markdown...",
+                    key=f"editor_{tab['id']}",
+                    label_visibility="collapsed",
+                    help="Edit your content in Markdown format"
+                )
+            
+            with preview_col:
+                st.subheader("👁️ Preview")
+                # Render markdown content with proper styling
+                st.markdown(f"""
+                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; min-height: 400px; background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'};">
+                    {content}
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            # Plain text mode
+            content = st.text_area(
+                "Content",
+                value=content,
+                height=400,
+                placeholder="Start typing your secure notes here...",
+                key=f"editor_{tab['id']}",
+                help="Edit your content in plain text format"
+            )
         
         # Highlight search term if found
         if search_term and search_term in content:
@@ -791,7 +846,7 @@ def site_management_page(site):
         # Save button
         col1, col2, col3 = st.columns([1, 4, 1])
         with col1:
-            save_button = st.button("💾 Save", type="primary", key="save_button")
+            save_button = st.button("💾 Save", type="primary", key="save_button", help="Save your changes to the current tab")
         with col3:
             st.caption("Ctrl+S")
         
@@ -838,7 +893,7 @@ def site_management_page(site):
             else:
                 st.info("No changes to save")
         with col2:
-            if st.button("🔄 Refresh"):
+            if st.button("🔄 Refresh", help="Refresh the current tab content"):
                 st.rerun()
         
         # Last updated
@@ -858,24 +913,147 @@ def main():
             initial_sidebar_state="expanded"
         )
         
-        # Custom CSS (removed theme-specific styles since we're handling them separately)
+        # Custom CSS for accessibility and better styling
         st.markdown("""
         <style>
-        .stButton > button {
-            width: 100%;
+        /* Accessibility improvements */
+        .stButton > button:focus,
+        .stTextInput > div > div > input:focus,
+        .stTextArea textarea:focus,
+        .stSelectbox > div > div:focus {
+            outline: 2px solid #4A90E2 !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3) !important;
         }
-        .stTextInput > div > div > input {
+        
+        /* Skip to main content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #4A90E2;
+            color: white;
+            padding: 8px;
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+        
+        /* Better contrast for dark mode */
+        [data-testid="stAppViewContainer"] {
+            background-color: #ffffff;
+        }
+        
+        [data-testid="stSidebar"] {
+            background-color: #f0f2f6;
+        }
+        
+        .stTextArea textarea {
+            background-color: #ffffff;
+            color: #000000;
             font-family: monospace;
         }
+        
+        h1, h2, h3, h4, h5, h6, p, div {
+            color: #000000;
+        }
+        
+        .stButton > button {
+            background-color: #e0e0e0;
+            color: black;
+            border: 1px solid #ccc;
+        }
+        
+        .stSelectbox > div > div {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        /* Dark mode styles */
+        [data-testid="stAppViewContainer"].dark-mode {
+            background-color: #0e1117;
+        }
+        
+        [data-testid="stSidebar"].dark-mode {
+            background-color: #1e2130;
+        }
+        
+        .stTextArea textarea.dark-mode {
+            background-color: #2d3142;
+            color: #ffffff;
+        }
+        
+        h1.dark-mode, h2.dark-mode, h3.dark-mode, h4.dark-mode, h5.dark-mode, h6.dark-mode, p.dark-mode, div.dark-mode {
+            color: #ffffff;
+        }
+        
+        .stButton > button.dark-mode {
+            background-color: #4a4e69;
+            color: white;
+        }
+        
+        .stSelectbox > div > div.dark-mode {
+            background-color: #2d3142;
+            color: #ffffff;
+        }
+        
+        /* Warning box improvements */
         .warning {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
-            margin: 10px 0;
+            margin: 15px 0;
+            color: #856404;
+        }
+        
+        .warning.dark-mode {
+            background-color: #332e14;
+            border: 1px solid #665c28;
+            color: #fff3cd;
+        }
+        
+        /* Focus indicators for all interactive elements */
+        button:focus, input:focus, textarea:focus, select:focus {
+            outline: 2px solid #4A90E2;
+            outline-offset: 2px;
+        }
+        
+        /* Better spacing and readability */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .stMarkdown p {
+            line-height: 1.6;
+            margin-bottom: 1em;
+        }
+        
+        /* Skip link for keyboard navigation */
+        .skip-to-content {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #4A90E2;
+            color: white;
+            padding: 8px;
+            z-index: 1000;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        
+        .skip-to-content:focus {
+            top: 6px;
         }
         </style>
         """, unsafe_allow_html=True)
+        
+        # Skip to main content link for keyboard users
+        st.markdown('<a href="#main-content" class="skip-to-content">Skip to main content</a>', unsafe_allow_html=True)
         
         # Check if Supabase is configured
         try:
