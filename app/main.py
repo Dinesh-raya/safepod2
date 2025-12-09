@@ -1179,6 +1179,10 @@ def site_management_page(site):
         # Set editor mode in session state
         st.session_state['editor_mode'] = 'markdown' if editor_mode == 'Markdown' else 'plain'
         
+        # Initialize variables that might not be defined in fullscreen mode
+        search_term = ""
+        spell_check_enabled = False
+        
         # Search functionality (only show in normal mode)
         if not st.session_state['fullscreen_mode']:
             search_term = st.text_input("🔍 Search in content", placeholder="Enter text to search...", key=f"search_{tab['id']}", help="Search for text within the current tab content (Ctrl+F)")
@@ -1265,8 +1269,8 @@ def site_management_page(site):
         else:
             st.session_state['unsaved_changes'] = False
         
-        # Highlight search term if found
-        if search_term and search_term in content:
+        # Highlight search term if found (only when not in fullscreen mode)
+        if not st.session_state['fullscreen_mode'] and search_term and search_term in content:
             st.success(f"Found {content.count(search_term)} occurrence(s) of '{search_term}'")
         
         # Enhanced content statistics
