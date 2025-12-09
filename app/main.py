@@ -77,16 +77,26 @@ def apply_theme_styles():
         background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
     }}
     
-    /* Top toolbar (Streamlit app settings bar) */
-    header {{
-        background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
+    /* Top toolbar (Streamlit app settings bar) - CRITICAL FIX */
+    header,
+    [data-testid="stHeader"],
+    header[data-testid="stHeader"] {{
+        background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
     }}
     
-    header * {{
+    header *,
+    [data-testid="stHeader"] * {{
         color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
     }}
     
-    /* Dropdown menus */
+    /* Toolbar buttons */
+    header button,
+    [data-testid="stHeader"] button {{
+        background-color: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#e0e0e0'} !important;
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    /* Dropdown menus - Enhanced selectors */
     .stSelectbox div:first-child,
     .stSelectbox div:first-child div,
     .stSelectbox div:first-child div div {{
@@ -95,18 +105,39 @@ def apply_theme_styles():
         border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
     }}
     
-    /* Dropdown menu options */
-    div[data-baseweb="select"] > div {{
+    /* Dropdown menu options - Multiple selectors for comprehensive coverage */
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="select"] ul,
+    div[role="listbox"],
+    ul[role="listbox"] {{
         background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
     }}
     
-    div[data-baseweb="select"] li {{
+    div[data-baseweb="select"] li,
+    div[role="option"],
+    li[role="option"] {{
         background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
         color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
     }}
     
-    div[data-baseweb="select"] li:hover {{
+    div[data-baseweb="select"] li:hover,
+    div[role="option"]:hover,
+    li[role="option"]:hover {{
         background-color: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#e0e0e0'} !important;
+    }}
+    
+    /* Radio buttons */
+    .stRadio > div,
+    .stRadio label,
+    div[role="radiogroup"] {{
+        background-color: transparent !important;
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    /* Radio button circles */
+    input[type="radio"] {{
+        background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+        border: 2px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#666666'} !important;
     }}
     
     /* Tooltip styling */
