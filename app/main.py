@@ -6,6 +6,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from typing import Tuple, Optional
+from streamlit.components.v1 import html as st_html
 
 # Ensure the project root is in the Python path for custom modules
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -338,6 +339,20 @@ def site_management_page(site):
         st.session_state['editor_mode'] = 'plain'  # Default to plain text mode
     if 'unsaved_changes' not in st.session_state:
         st.session_state['unsaved_changes'] = False  # Track unsaved changes
+    
+    # Add JavaScript for browser close warning
+    st_html("""
+    <script>
+    window.onbeforeunload = function() {
+        const warningElement = window.parent.document.querySelector('.stAlert');
+        const hasUnsavedWarning = warningElement && warningElement.textContent.includes('unsaved changes');
+        if (hasUnsavedWarning) {
+            return "You have unsaved changes. Are you sure you want to leave without saving?";
+        }
+        return null;
+    };
+    </script>
+    """, height=0)
     
     # Sidebar for site management
     with st.sidebar:
