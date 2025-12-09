@@ -365,10 +365,13 @@ def site_management_page(site):
         
         # Theme toggle
         theme_toggle = st.toggle("🌙 Dark Mode", value=(st.session_state['theme'] == 'dark'))
-        if theme_toggle:
-            st.session_state['theme'] = 'dark'
-        else:
-            st.session_state['theme'] = 'light'
+        if theme_toggle != (st.session_state['theme'] == 'dark'):
+            # Theme has changed, update state and rerun to apply styles
+            if theme_toggle:
+                st.session_state['theme'] = 'dark'
+            else:
+                st.session_state['theme'] = 'light'
+            st.rerun()
         
         # Apply theme styles
         if st.session_state['theme'] == 'dark':
