@@ -297,8 +297,7 @@ def site_management_page(site):
     """Main site management page"""
     st.title(f"📝 {site['username']}'s SecureText Vault")
     
-    # Add main content anchor for accessibility
-    st.markdown('<div id="main-content"></div>', unsafe_allow_html=True)
+    # Removed main content anchor
     
     # Check for session timeout (30 minutes of inactivity)
     SESSION_TIMEOUT_MINUTES = 30
@@ -337,6 +336,8 @@ def site_management_page(site):
         st.session_state['last_auto_save_time'] = datetime.now()  # Auto-save tracking
     if 'editor_mode' not in st.session_state:
         st.session_state['editor_mode'] = 'plain'  # Default to plain text mode
+    if 'unsaved_changes' not in st.session_state:
+        st.session_state['unsaved_changes'] = False  # Track unsaved changes
     
     # Sidebar for site management
     with st.sidebar:
@@ -359,30 +360,38 @@ def site_management_page(site):
             st.markdown("""
             <style>
             [data-testid="stAppViewContainer"] {
-                background-color: #0e1117;
+                background-color: #0e1117 !important;
             }
             [data-testid="stSidebar"] {
-                background-color: #1e2130;
+                background-color: #1e2130 !important;
             }
             .stTextArea textarea {
-                background-color: #2d3142;
-                color: #ffffff;
+                background-color: #2d3142 !important;
+                color: #ffffff !important;
             }
-            h1, h2, h3, h4, h5, h6, p, div {
-                color: #ffffff;
+            h1, h2, h3, h4, h5, h6, p, div, span, label {
+                color: #ffffff !important;
             }
             .stButton > button {
-                background-color: #4a4e69;
-                color: white;
+                background-color: #4a4e69 !important;
+                color: white !important;
             }
             .stSelectbox > div > div {
-                background-color: #2d3142;
-                color: #ffffff;
+                background-color: #2d3142 !important;
+                color: #ffffff !important;
             }
             .warning {
-                background-color: #332e14;
-                border: 1px solid #665c28;
-                color: #fff3cd;
+                background-color: #332e14 !important;
+                border: 1px solid #665c28 !important;
+                color: #fff3cd !important;
+            }
+            .stMarkdown code {
+                background-color: #2d3142 !important;
+                color: #ffffff !important;
+            }
+            .stAlert div {
+                background-color: #332e14 !important;
+                color: #fff3cd !important;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -390,30 +399,38 @@ def site_management_page(site):
             st.markdown("""
             <style>
             [data-testid="stAppViewContainer"] {
-                background-color: #ffffff;
+                background-color: #ffffff !important;
             }
             [data-testid="stSidebar"] {
-                background-color: #f0f2f6;
+                background-color: #f0f2f6 !important;
             }
             .stTextArea textarea {
-                background-color: #ffffff;
-                color: #000000;
+                background-color: #ffffff !important;
+                color: #000000 !important;
             }
-            h1, h2, h3, h4, h5, h6, p, div {
-                color: #000000;
+            h1, h2, h3, h4, h5, h6, p, div, span, label {
+                color: #000000 !important;
             }
             .stButton > button {
-                background-color: #e0e0e0;
-                color: black;
+                background-color: #e0e0e0 !important;
+                color: black !important;
             }
             .stSelectbox > div > div {
-                background-color: #ffffff;
-                color: #000000;
+                background-color: #ffffff !important;
+                color: #000000 !important;
             }
             .warning {
-                background-color: #fff3cd;
-                border: 1px solid #ffeaa7;
-                color: #856404;
+                background-color: #fff3cd !important;
+                border: 1px solid #ffeaa7 !important;
+                color: #856404 !important;
+            }
+            .stMarkdown code {
+                background-color: #f0f0f0 !important;
+                color: #000000 !important;
+            }
+            .stAlert div {
+                background-color: #fff3cd !important;
+                color: #856404 !important;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -726,9 +743,17 @@ def site_management_page(site):
         
         # Logout button
         if st.button("🚪 Logout", help="Sign out of your SecureText Vault"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+            # Check for unsaved changes before logout
+            if st.session_state.get('unsaved_changes', False):
+                st.warning("You have unsaved changes. Please save before logging out.")
+                if st.button("Logout Anyway"):
+                    for key in list(st.session_state.keys()):
+                        del st.session_state[key]
+                    st.rerun()
+            else:
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.rerun()
     
     # Main content area
     if st.session_state['current_tab']:
@@ -756,6 +781,9 @@ def site_management_page(site):
             content = decrypt_content_if_enabled(tab['encrypted_content'], site)
         else:
             content = tab.get('content', '')
+        
+        # Store original content for comparison
+        original_content = content
         
         # Content editor based on mode
         if st.session_state['editor_mode'] == 'markdown':
@@ -792,6 +820,12 @@ def site_management_page(site):
                 key=f"editor_{tab['id']}",
                 help="Edit your content in plain text format"
             )
+        
+        # Check for unsaved changes
+        if content != original_content:
+            st.session_state['unsaved_changes'] = True
+        else:
+            st.session_state['unsaved_changes'] = False
         
         # Highlight search term if found
         if search_term and search_term in content:
@@ -839,6 +873,7 @@ def site_management_page(site):
                             # Update auto-save timestamp
                             st.session_state['last_auto_save_time'] = datetime.now()
                             st.session_state['last_auto_save'] = datetime.now().strftime("%H:%M:%S")
+                            st.session_state['unsaved_changes'] = False
                     except Exception as e:
                         # Silently fail on auto-save errors to avoid disrupting user
                         pass
@@ -885,6 +920,7 @@ def site_management_page(site):
                             # Update auto-save timestamp
                             st.session_state['last_auto_save_time'] = datetime.now()
                             st.session_state['last_auto_save'] = datetime.now().strftime("%H:%M:%S")
+                            st.session_state['unsaved_changes'] = False
                             st.rerun()
                         else:
                             st.error("Failed to save content")
@@ -899,6 +935,10 @@ def site_management_page(site):
         # Last updated
         if tab.get('updated_at'):
             st.caption(f"Last updated: {tab['updated_at']}")
+        
+        # Show unsaved changes warning
+        if st.session_state.get('unsaved_changes', False):
+            st.warning("⚠️ You have unsaved changes. Don't forget to save before leaving!")
     else:
         st.info("👈 Select or create a tab from the sidebar to start writing")
 
@@ -926,94 +966,80 @@ def main():
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3) !important;
         }
         
-        /* Skip to main content link */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 6px;
-            background: #4A90E2;
-            color: white;
-            padding: 8px;
-            z-index: 1000;
-            border-radius: 4px;
-        }
+        /* Removed skip link styles */
         
-        .skip-link:focus {
-            top: 6px;
-        }
-        
-        /* Better contrast for dark mode */
+        /* Better contrast for light mode */
         [data-testid="stAppViewContainer"] {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
         }
         
         [data-testid="stSidebar"] {
-            background-color: #f0f2f6;
+            background-color: #f0f2f6 !important;
         }
         
         .stTextArea textarea {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: #ffffff !important;
+            color: #000000 !important;
             font-family: monospace;
         }
         
-        h1, h2, h3, h4, h5, h6, p, div {
-            color: #000000;
+        h1, h2, h3, h4, h5, h6, p, div, span, label {
+            color: #000000 !important;
         }
         
         .stButton > button {
-            background-color: #e0e0e0;
-            color: black;
-            border: 1px solid #ccc;
+            background-color: #e0e0e0 !important;
+            color: black !important;
+            border: 1px solid #ccc !important;
         }
         
         .stSelectbox > div > div {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: #ffffff !important;
+            color: #000000 !important;
         }
         
         /* Dark mode styles */
         [data-testid="stAppViewContainer"].dark-mode {
-            background-color: #0e1117;
+            background-color: #0e1117 !important;
         }
         
         [data-testid="stSidebar"].dark-mode {
-            background-color: #1e2130;
+            background-color: #1e2130 !important;
         }
         
         .stTextArea textarea.dark-mode {
-            background-color: #2d3142;
-            color: #ffffff;
+            background-color: #2d3142 !important;
+            color: #ffffff !important;
         }
         
-        h1.dark-mode, h2.dark-mode, h3.dark-mode, h4.dark-mode, h5.dark-mode, h6.dark-mode, p.dark-mode, div.dark-mode {
-            color: #ffffff;
+        h1.dark-mode, h2.dark-mode, h3.dark-mode, h4.dark-mode, h5.dark-mode, h6.dark-mode, p.dark-mode, div.dark-mode, span.dark-mode, label.dark-mode {
+            color: #ffffff !important;
         }
         
         .stButton > button.dark-mode {
-            background-color: #4a4e69;
-            color: white;
+            background-color: #4a4e69 !important;
+            color: white !important;
         }
         
         .stSelectbox > div > div.dark-mode {
-            background-color: #2d3142;
-            color: #ffffff;
+            background-color: #2d3142 !important;
+            color: #ffffff !important;
         }
         
         /* Warning box improvements */
         .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background-color: #fff3cd !important;
+            border: 1px solid #ffeaa7 !important;
             padding: 15px;
             border-radius: 5px;
             margin: 15px 0;
-            color: #856404;
+            color: #856404 !important;
         }
         
         .warning.dark-mode {
-            background-color: #332e14;
-            border: 1px solid #665c28;
-            color: #fff3cd;
+            background-color: #332e14 !important;
+            border: 1px solid #665c28 !important;
+            color: #fff3cd !important;
         }
         
         /* Focus indicators for all interactive elements */
@@ -1033,27 +1059,11 @@ def main():
             margin-bottom: 1em;
         }
         
-        /* Skip link for keyboard navigation */
-        .skip-to-content {
-            position: absolute;
-            top: -40px;
-            left: 6px;
-            background: #4A90E2;
-            color: white;
-            padding: 8px;
-            z-index: 1000;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-        
-        .skip-to-content:focus {
-            top: 6px;
-        }
+        /* Removed skip link styles */
         </style>
         """, unsafe_allow_html=True)
         
-        # Skip to main content link for keyboard users
-        st.markdown('<a href="#main-content" class="skip-to-content">Skip to main content</a>', unsafe_allow_html=True)
+        # Removed skip to main content link
         
         # Check if Supabase is configured
         try:
