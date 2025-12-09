@@ -77,6 +77,45 @@ def apply_theme_styles():
         background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
     }}
     
+    /* Top toolbar (Streamlit app settings bar) */
+    header {{
+        background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
+    }}
+    
+    header * {{
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    /* Dropdown menus */
+    .stSelectbox div:first-child,
+    .stSelectbox div:first-child div,
+    .stSelectbox div:first-child div div {{
+        background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
+    }}
+    
+    /* Dropdown menu options */
+    div[data-baseweb="select"] > div {{
+        background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+    }}
+    
+    div[data-baseweb="select"] li {{
+        background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    div[data-baseweb="select"] li:hover {{
+        background-color: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#e0e0e0'} !important;
+    }}
+    
+    /* Tooltip styling */
+    [data-testid="stTooltipContent"] {{
+        background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
+    }}
+    
     /* Text area styles - Comprehensive coverage */
     .stTextArea textarea,
     textarea {{
@@ -194,6 +233,33 @@ def apply_theme_styles():
     /* Override specific elements that need different colors */
     h1, h2, h3, h4, h5, h6, .stTitle {{
         color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    /* Menu and navigation items */
+    [data-testid="stSidebar"] a {{
+        color: {'#a0a0a0' if st.session_state['theme'] == 'dark' else '#666666'} !important;
+    }}
+    
+    [data-testid="stSidebar"] a:hover {{
+        color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+    }}
+    
+    /* Scrollbars */
+    ::-webkit-scrollbar {{
+        width: 12px;
+    }}
+    
+    ::-webkit-scrollbar-track {{
+        background: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
+    }}
+    
+    ::-webkit-scrollbar-thumb {{
+        background: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#c1c1c1'} !important;
+        border-radius: 6px;
+    }}
+    
+    ::-webkit-scrollbar-thumb:hover {{
+        background: {'#5c6370' if st.session_state['theme'] == 'dark' else '#a8a8a8'} !important;
     }}
     </style>
     """
