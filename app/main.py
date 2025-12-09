@@ -373,77 +373,123 @@ def site_management_page(site):
                 st.session_state['theme'] = 'light'
             st.rerun()
         
-        # Apply theme styles globally
-        st.markdown(f"""
+        # Apply theme styles globally with enhanced consistency
+        theme_styles = f"""
         <style>
-        /* Global theme styles */
-        [data-testid="stAppViewContainer"] {{
+        /* Global theme styles - Ensure complete consistency */
+        [data-testid="stAppViewContainer"],
+        section[data-testid="stSidebar"] > div {{
             background-color: {'#0e1117' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
         }}
+        
         [data-testid="stSidebar"] {{
             background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
         }}
-            
-        /* Text area styles */
-        .stTextArea textarea {{
+        
+        /* Text area styles - Comprehensive coverage */
+        .stTextArea textarea,
+        textarea {{
             background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
             color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
-            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important; /* Visible cursor */
+            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
         }}
-            
-        /* Text elements */
-        h1, h2, h3, h4, h5, h6, p, div, span, label {{
+        
+        /* Text elements - Complete coverage */
+        h1, h2, h3, h4, h5, h6, p, div, span, label,
+        .stMarkdown, .stText, .stCaption {{
             color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
         }}
-            
-        /* Buttons */
-        .stButton > button {{
+        
+        /* Form inputs */
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="number"],
+        input {{
+            background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
+        }}
+        
+        /* Buttons - Enhanced styling */
+        .stButton > button,
+        button {{
             background-color: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#e0e0e0'} !important;
             color: {'white' if st.session_state['theme'] == 'dark' else 'black'} !important;
+            border: 1px solid {'#6c757d' if st.session_state['theme'] == 'dark' else '#adb5bd'} !important;
         }}
-            
+        
+        /* Button hover states */
+        .stButton > button:hover,
+        button:hover {{
+            background-color: {'#5c6370' if st.session_state['theme'] == 'dark' else '#d0d0d0'} !important;
+            border: 1px solid {'#7c8590' if st.session_state['theme'] == 'dark' else '#bcc1c6'} !important;
+        }}
+        
         /* Select boxes */
-        .stSelectbox > div > div {{
+        .stSelectbox > div > div,
+        select {{
             background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
             color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
         }}
-            
+        
         /* Warning boxes */
         .warning {{
             background-color: {'#332e14' if st.session_state['theme'] == 'dark' else '#fff3cd'} !important;
             border: 1px solid {'#665c28' if st.session_state['theme'] == 'dark' else '#ffeaa7'} !important;
             color: {'#fff3cd' if st.session_state['theme'] == 'dark' else '#856404'} !important;
         }}
-            
+        
         /* Code blocks */
-        .stMarkdown code {{
+        .stMarkdown code,
+        code {{
             background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#f0f0f0'} !important;
             color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#ddd'} !important;
         }}
-            
+        
         /* Alerts */
-        .stAlert div {{
+        .stAlert div,
+        .stAlert {{
             background-color: {'#332e14' if st.session_state['theme'] == 'dark' else '#fff3cd'} !important;
             color: {'#fff3cd' if st.session_state['theme'] == 'dark' else '#856404'} !important;
+            border: 1px solid {'#665c28' if st.session_state['theme'] == 'dark' else '#ffeaa7'} !important;
         }}
-            
+        
         /* Focus indicators for better visibility */
         button:focus, input:focus, textarea:focus, select:focus {{
             outline: 2px solid {'#4A90E2' if st.session_state['theme'] == 'dark' else '#007bff'} !important;
             outline-offset: 2px;
+            box-shadow: 0 0 0 3px {'rgba(74, 144, 226, 0.3)' if st.session_state['theme'] == 'dark' else 'rgba(0, 123, 255, 0.3)'} !important;
         }}
-            
-        /* Textarea cursor visibility */
-        textarea {{
-            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        
+        /* Form containers */
+        .stForm {{
+            background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f8f9fa'} !important;
+            border: 1px solid {'#4a4e69' if st.session_state['theme'] == 'dark' else '#dee2e6'} !important;
+            border-radius: 5px;
         }}
-            
-        /* Input fields cursor */
-        input {{
-            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        
+        /* Column dividers */
+        [data-testid="column"] {{
+            background-color: transparent !important;
+        }}
+        
+        /* Ensure all text elements inherit theme colors */
+        * {{
+            color: {'#e0e0e0' if st.session_state['theme'] == 'dark' else '#212529'} !important;
+        }}
+        
+        /* Override specific elements that need different colors */
+        h1, h2, h3, h4, h5, h6, .stTitle {{
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
         }}
         </style>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(theme_styles, unsafe_allow_html=True)
         
         # Tab management
         st.subheader("Tabs")
@@ -963,43 +1009,7 @@ def main():
             initial_sidebar_state="expanded"
         )
         
-        # Custom CSS for accessibility and better styling
-        st.markdown("""
-        <style>
-        /* Accessibility improvements */
-        .stButton > button:focus,
-        .stTextInput > div > div > input:focus,
-        .stTextArea textarea:focus,
-        .stSelectbox > div > div:focus {
-            outline: 2px solid #4A90E2 !important;
-            outline-offset: 2px !important;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3) !important;
-        }
-        
-        /* Removed skip link styles */
-        
 
-        
-        /* Focus indicators for all interactive elements */
-        button:focus, input:focus, textarea:focus, select:focus {
-            outline: 2px solid #4A90E2;
-            outline-offset: 2px;
-        }
-        
-        /* Better spacing and readability */
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-        }
-        
-        .stMarkdown p {
-            line-height: 1.6;
-            margin-bottom: 1em;
-        }
-        
-        /* Removed skip link styles */
-        </style>
-        """, unsafe_allow_html=True)
         
         # Removed skip to main content link
         
