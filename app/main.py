@@ -373,85 +373,77 @@ def site_management_page(site):
                 st.session_state['theme'] = 'light'
             st.rerun()
         
-        # Apply theme styles
-        if st.session_state['theme'] == 'dark':
-            st.markdown("""
-            <style>
-            [data-testid="stAppViewContainer"] {
-                background-color: #0e1117 !important;
-            }
-            [data-testid="stSidebar"] {
-                background-color: #1e2130 !important;
-            }
-            .stTextArea textarea {
-                background-color: #2d3142 !important;
-                color: #ffffff !important;
-            }
-            h1, h2, h3, h4, h5, h6, p, div, span, label {
-                color: #ffffff !important;
-            }
-            .stButton > button {
-                background-color: #4a4e69 !important;
-                color: white !important;
-            }
-            .stSelectbox > div > div {
-                background-color: #2d3142 !important;
-                color: #ffffff !important;
-            }
-            .warning {
-                background-color: #332e14 !important;
-                border: 1px solid #665c28 !important;
-                color: #fff3cd !important;
-            }
-            .stMarkdown code {
-                background-color: #2d3142 !important;
-                color: #ffffff !important;
-            }
-            .stAlert div {
-                background-color: #332e14 !important;
-                color: #fff3cd !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <style>
-            [data-testid="stAppViewContainer"] {
-                background-color: #ffffff !important;
-            }
-            [data-testid="stSidebar"] {
-                background-color: #f0f2f6 !important;
-            }
-            .stTextArea textarea {
-                background-color: #ffffff !important;
-                color: #000000 !important;
-            }
-            h1, h2, h3, h4, h5, h6, p, div, span, label {
-                color: #000000 !important;
-            }
-            .stButton > button {
-                background-color: #e0e0e0 !important;
-                color: black !important;
-            }
-            .stSelectbox > div > div {
-                background-color: #ffffff !important;
-                color: #000000 !important;
-            }
-            .warning {
-                background-color: #fff3cd !important;
-                border: 1px solid #ffeaa7 !important;
-                color: #856404 !important;
-            }
-            .stMarkdown code {
-                background-color: #f0f0f0 !important;
-                color: #000000 !important;
-            }
-            .stAlert div {
-                background-color: #fff3cd !important;
-                color: #856404 !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        # Apply theme styles globally
+        st.markdown(f"""
+        <style>
+        /* Global theme styles */
+        [data-testid="stAppViewContainer"] {{
+            background-color: {'#0e1117' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+        }}
+        [data-testid="stSidebar"] {{
+            background-color: {'#1e2130' if st.session_state['theme'] == 'dark' else '#f0f2f6'} !important;
+        }}
+            
+        /* Text area styles */
+        .stTextArea textarea {{
+            background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important; /* Visible cursor */
+        }}
+            
+        /* Text elements */
+        h1, h2, h3, h4, h5, h6, p, div, span, label {{
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        }}
+            
+        /* Buttons */
+        .stButton > button {{
+            background-color: {'#4a4e69' if st.session_state['theme'] == 'dark' else '#e0e0e0'} !important;
+            color: {'white' if st.session_state['theme'] == 'dark' else 'black'} !important;
+        }}
+            
+        /* Select boxes */
+        .stSelectbox > div > div {{
+            background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#ffffff'} !important;
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        }}
+            
+        /* Warning boxes */
+        .warning {{
+            background-color: {'#332e14' if st.session_state['theme'] == 'dark' else '#fff3cd'} !important;
+            border: 1px solid {'#665c28' if st.session_state['theme'] == 'dark' else '#ffeaa7'} !important;
+            color: {'#fff3cd' if st.session_state['theme'] == 'dark' else '#856404'} !important;
+        }}
+            
+        /* Code blocks */
+        .stMarkdown code {{
+            background-color: {'#2d3142' if st.session_state['theme'] == 'dark' else '#f0f0f0'} !important;
+            color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        }}
+            
+        /* Alerts */
+        .stAlert div {{
+            background-color: {'#332e14' if st.session_state['theme'] == 'dark' else '#fff3cd'} !important;
+            color: {'#fff3cd' if st.session_state['theme'] == 'dark' else '#856404'} !important;
+        }}
+            
+        /* Focus indicators for better visibility */
+        button:focus, input:focus, textarea:focus, select:focus {{
+            outline: 2px solid {'#4A90E2' if st.session_state['theme'] == 'dark' else '#007bff'} !important;
+            outline-offset: 2px;
+        }}
+            
+        /* Textarea cursor visibility */
+        textarea {{
+            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        }}
+            
+        /* Input fields cursor */
+        input {{
+            caret-color: {'#ffffff' if st.session_state['theme'] == 'dark' else '#000000'} !important;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
         
         # Tab management
         st.subheader("Tabs")
@@ -986,79 +978,7 @@ def main():
         
         /* Removed skip link styles */
         
-        /* Better contrast for light mode */
-        [data-testid="stAppViewContainer"] {
-            background-color: #ffffff !important;
-        }
-        
-        [data-testid="stSidebar"] {
-            background-color: #f0f2f6 !important;
-        }
-        
-        .stTextArea textarea {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            font-family: monospace;
-        }
-        
-        h1, h2, h3, h4, h5, h6, p, div, span, label {
-            color: #000000 !important;
-        }
-        
-        .stButton > button {
-            background-color: #e0e0e0 !important;
-            color: black !important;
-            border: 1px solid #ccc !important;
-        }
-        
-        .stSelectbox > div > div {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
-        
-        /* Dark mode styles */
-        [data-testid="stAppViewContainer"].dark-mode {
-            background-color: #0e1117 !important;
-        }
-        
-        [data-testid="stSidebar"].dark-mode {
-            background-color: #1e2130 !important;
-        }
-        
-        .stTextArea textarea.dark-mode {
-            background-color: #2d3142 !important;
-            color: #ffffff !important;
-        }
-        
-        h1.dark-mode, h2.dark-mode, h3.dark-mode, h4.dark-mode, h5.dark-mode, h6.dark-mode, p.dark-mode, div.dark-mode, span.dark-mode, label.dark-mode {
-            color: #ffffff !important;
-        }
-        
-        .stButton > button.dark-mode {
-            background-color: #4a4e69 !important;
-            color: white !important;
-        }
-        
-        .stSelectbox > div > div.dark-mode {
-            background-color: #2d3142 !important;
-            color: #ffffff !important;
-        }
-        
-        /* Warning box improvements */
-        .warning {
-            background-color: #fff3cd !important;
-            border: 1px solid #ffeaa7 !important;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            color: #856404 !important;
-        }
-        
-        .warning.dark-mode {
-            background-color: #332e14 !important;
-            border: 1px solid #665c28 !important;
-            color: #fff3cd !important;
-        }
+
         
         /* Focus indicators for all interactive elements */
         button:focus, input:focus, textarea:focus, select:focus {
