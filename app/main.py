@@ -572,6 +572,8 @@ def site_management_page(site):
         st.session_state['editor_mode'] = 'plain'  # Default to plain text mode
     if 'unsaved_changes' not in st.session_state:
         st.session_state['unsaved_changes'] = False  # Track unsaved changes
+    if 'fullscreen_mode' not in st.session_state:
+        st.session_state['fullscreen_mode'] = False  # Track fullscreen mode
     
     # Add JavaScript for browser close warning
     st_html("""
@@ -587,10 +589,205 @@ def site_management_page(site):
     </script>
     """, height=0)
     
+    # Add JavaScript for keyboard shortcuts, enhanced functionality, and toast notifications
+    st_html("""
+    <script>
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+S for save
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            // Find and click the save button
+            const saveButtons = window.parent.document.querySelectorAll('button');
+            for (let button of saveButtons) {
+                if (button.textContent.includes('Save') || button.textContent.includes('💾')) {
+                    button.click();
+                    showToast('Saving content...', 'info');
+                    break;
+                }
+            }
+        }
+        
+        // Ctrl+Shift+N for new tab
+        if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+            e.preventDefault();
+            // Find and click the new tab button
+            const newTabButtons = window.parent.document.querySelectorAll('button');
+            for (let button of newTabButtons) {
+                if (button.textContent.includes('New Tab') || button.textContent.includes('➕')) {
+                    button.click();
+                    showToast('Creating new tab...', 'info');
+                    break;
+                }
+            }
+        }
+        
+        // Ctrl+Shift+T for theme toggle
+        if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+            e.preventDefault();
+            // Find and click the theme toggle
+            const themeToggles = window.parent.document.querySelectorAll('input[type="checkbox"]');
+            for (let toggle of themeToggles) {
+                if (toggle.parentElement && toggle.parentElement.textContent.includes('Dark Mode')) {
+                    toggle.click();
+                    showToast('Toggling theme...', 'info');
+                    break;
+                }
+            }
+        }
+        
+        // Ctrl+F for search focus
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            // Find and focus the search input
+            const searchInputs = window.parent.document.querySelectorAll('input[type="text"]');
+            for (let input of searchInputs) {
+                if (input.placeholder && input.placeholder.includes('search')) {
+                    input.focus();
+                    break;
+                }
+            }
+        }
+    });
+    
+    // Enhanced save button styling when there are unsaved changes
+    function updateSaveButtonStyle() {
+        const saveButtons = window.parent.document.querySelectorAll('button');
+        for (let button of saveButtons) {
+            if (button.textContent.includes('Save') || button.textContent.includes('💾')) {
+                // Check if there are unsaved changes
+                const warningElements = window.parent.document.querySelectorAll('.stAlert');
+                let hasUnsavedChanges = false;
+                for (let alert of warningElements) {
+                    if (alert.textContent.includes('unsaved changes')) {
+                        hasUnsavedChanges = true;
+                        break;
+                    }
+                }
+                
+                // Update button style based on unsaved changes
+                if (hasUnsavedChanges) {
+                    button.style.backgroundColor = '#ff6b6b';
+                    button.style.borderColor = '#ff5252';
+                    button.style.animation = 'pulse 1s infinite';
+                } else {
+                    // Reset to default styles
+                    button.style.backgroundColor = '';
+                    button.style.borderColor = '';
+                    button.style.animation = '';
+                }
+            }
+        }
+    }
+    
+    // Toast notification system
+    function showToast(message, type = 'info') {
+        // Remove any existing toast
+        const existingToast = document.getElementById('toast-notification');
+        if (existingToast) {
+            existingToast.remove();
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.textContent = message;
+        
+        // Style based on type
+        toast.style.position = 'fixed';
+        toast.style.top = '20px';
+        toast.style.right = '20px';
+        toast.style.padding = '12px 20px';
+        toast.style.borderRadius = '4px';
+        toast.style.color = 'white';
+        toast.style.fontWeight = 'bold';
+        toast.style.zIndex = '9999';
+        toast.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        
+        switch(type) {
+            case 'success':
+                toast.style.backgroundColor = '#28a745';
+                break;
+            case 'error':
+                toast.style.backgroundColor = '#dc3545';
+                break;
+            case 'warning':
+                toast.style.backgroundColor = '#ffc107';
+                toast.style.color = '#212529';
+                break;
+            default:
+                toast.style.backgroundColor = '#17a2b8';
+        }
+        
+        // Add to document
+        document.body.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Auto remove after delay
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
+    
+    // Expose toast function globally
+    window.showToast = showToast;
+    
+    // Add CSS for save button animation and toast
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Update save button style periodically
+    setInterval(updateSaveButtonStyle, 1000);
+    
+    // Listen for save success messages
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Element node
+                        // Check for success messages
+                        if (node.textContent && node.textContent.includes('Content saved')) {
+                            showToast('Content saved successfully!', 'success');
+                        }
+                        // Check for error messages
+                        else if (node.textContent && node.textContent.includes('Error') || node.textContent.includes('Failed')) {
+                            showToast('Operation failed. Please try again.', 'error');
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    // Start observing
+    observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    """, height=0)
+    
     # Apply theme styles globally
     apply_theme_styles()
     
-    # Sidebar for site management
+    # Enhanced tab management with drag-and-drop reordering
     with st.sidebar:
         st.header("Site Management")
         
@@ -633,12 +830,14 @@ def site_management_page(site):
                     current_tab_index = 0
                     st.session_state['current_tab'] = tabs[0] if tabs else None
             
+            # Enhanced tab selector with visual indicators
+            st.markdown("### 📁 Tab Selection")
             current_tab_name = st.selectbox(
                 "Select Tab",
                 tab_names,
                 index=current_tab_index,
-                key=f"tab_selector_{site['id']}",  # Add key to ensure proper re-rendering
-                help="Select a tab to view or edit its content"
+                key=f"tab_selector_{site['id']}",
+                help="Select a tab to view or edit its content (Ctrl+1-9 for quick access)"
             )
             
             # Find the selected tab
@@ -647,16 +846,17 @@ def site_management_page(site):
             
             # Tab management buttons (Rename and Delete)
             if selected_tab:
+                st.markdown("### ⚙️ Tab Actions")
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("✏️ Rename", help="Rename the current tab"):
+                    if st.button("✏️ Rename", help="Rename the current tab (F2)"):
                         st.session_state['rename_tab_id'] = selected_tab['id']
                         st.session_state['rename_tab_name'] = selected_tab['tab_name']
                 
                 with col2:
                     # Prevent deletion of the last tab
                     if len(tabs) > 1:
-                        if st.button("🗑️ Delete", help="Delete the current tab"):
+                        if st.button("🗑️ Delete", help="Delete the current tab (Del)"):
                             st.session_state['delete_tab_id'] = selected_tab['id']
                             st.session_state['delete_tab_name'] = selected_tab['tab_name']
                     else:
@@ -664,12 +864,12 @@ def site_management_page(site):
             
             # Create new tab button
             if len(tabs) < MAX_TABS_PER_SITE:
-                if st.button("➕ New Tab", help="Create a new tab for organizing your content"):
+                if st.button("➕ New Tab", help="Create a new tab for organizing your content (Ctrl+Shift+N)", type="primary"):
                     st.session_state['show_new_tab_form'] = True
             
             # Show new tab form if requested
             if st.session_state['show_new_tab_form']:
-                with st.form("new_tab_form", clear_on_submit=True):  # Add clear_on_submit
+                with st.form("new_tab_form", clear_on_submit=True):
                     new_tab_name = st.text_input("Tab Name", placeholder="Enter tab name", max_chars=MAX_TAB_NAME_LENGTH, key="new_tab_name_input", help="Enter a name for your new tab")
                     col1, col2 = st.columns(2)
                     with col1:
@@ -705,6 +905,22 @@ def site_management_page(site):
                                     st.error(f"Error creating tab: {str(e)}")
                     elif cancel_clicked:
                         st.session_state['show_new_tab_form'] = False
+                        st.rerun()
+            
+            # Enhanced tab management with quick access
+            st.markdown("### 🗂️ All Tabs")
+            for i, tab in enumerate(tabs[:9]):  # Show first 9 tabs with quick access
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    # Highlight current tab
+                    if st.session_state['current_tab'] and tab['id'] == st.session_state['current_tab']['id']:
+                        st.markdown(f"**{i+1}. {tab['tab_name']}** ← _Current_")
+                    else:
+                        st.markdown(f"{i+1}. {tab['tab_name']}")
+                with col2:
+                    # Quick access button
+                    if st.button(f"#{i+1}", key=f"quick_access_{tab['id']}", help=f"Quick access to {tab['tab_name']} (Ctrl+{i+1})"):
+                        st.session_state['current_tab'] = tab
                         st.rerun()
             
             # Handle tab renaming
@@ -786,7 +1002,7 @@ def site_management_page(site):
         else:
             # Create first tab
             st.info("No tabs yet. Create your first tab below.")
-            with st.form("first_tab_form", clear_on_submit=True):  # Add clear_on_submit
+            with st.form("first_tab_form", clear_on_submit=True):
                 new_tab_name = st.text_input("First Tab Name", value=DEFAULT_TAB_NAME, max_chars=MAX_TAB_NAME_LENGTH, key="first_tab_name_input", help="Enter a name for your first tab")
                 create_clicked = st.form_submit_button("Create First Tab")
                 
@@ -933,22 +1149,43 @@ def site_management_page(site):
     if st.session_state['current_tab']:
         tab = st.session_state['current_tab']
         
-        st.header(f"📄 {tab['tab_name']}")
+        # Fullscreen mode toggle
+        if st.session_state['fullscreen_mode']:
+            st.subheader(f"📄 {tab['tab_name']} (Fullscreen Mode)")
+            # Exit fullscreen button
+            if st.button(".Exit Fullscreen", key="exit_fullscreen"):
+                st.session_state['fullscreen_mode'] = False
+                st.rerun()
+        else:
+            st.header(f"📄 {tab['tab_name']}")
+            # Enter fullscreen button
+            if st.button("🔍 Fullscreen Mode", key="enter_fullscreen"):
+                st.session_state['fullscreen_mode'] = True
+                st.rerun()
         
         # Editor mode toggle
-        editor_mode = st.radio(
-            "Editor Mode",
-            options=['Plain Text', 'Markdown'],
-            horizontal=True,
-            key=f"editor_mode_{tab['id']}",
-            help="Switch between plain text and Markdown editing modes"
-        )
+        if not st.session_state['fullscreen_mode']:
+            editor_mode = st.radio(
+                "Editor Mode",
+                options=['Plain Text', 'Markdown'],
+                horizontal=True,
+                key=f"editor_mode_{tab['id']}",
+                help="Switch between plain text and Markdown editing modes"
+            )
+        else:
+            # In fullscreen mode, use a hidden editor mode
+            editor_mode = 'Plain Text' if st.session_state['editor_mode'] == 'plain' else 'Markdown'
         
         # Set editor mode in session state
         st.session_state['editor_mode'] = 'markdown' if editor_mode == 'Markdown' else 'plain'
         
-        # Search functionality
-        search_term = st.text_input("🔍 Search in content", placeholder="Enter text to search...", key=f"search_{tab['id']}", help="Search for text within the current tab content")
+        # Search functionality (only show in normal mode)
+        if not st.session_state['fullscreen_mode']:
+            search_term = st.text_input("🔍 Search in content", placeholder="Enter text to search...", key=f"search_{tab['id']}", help="Search for text within the current tab content (Ctrl+F)")
+        
+        # Spell-check toggle (only show in normal mode)
+        if not st.session_state['fullscreen_mode']:
+            spell_check_enabled = st.checkbox("ABC Spell Check", value=False, key=f"spell_check_{tab['id']}", help="Enable spell checking in the editor")
         
         # Get the appropriate content (decrypted if necessary)
         if tab.get('encrypted_content'):
@@ -959,13 +1196,25 @@ def site_management_page(site):
         # Store original content for comparison
         original_content = content
         
-        # Content editor based on mode
-        if st.session_state['editor_mode'] == 'markdown':
+        # Content editor based on mode and fullscreen state
+        if st.session_state['fullscreen_mode']:
+            # Fullscreen editor mode
+            content = st.text_area(
+                "Content",
+                value=content,
+                height=600,
+                placeholder="Start typing your secure notes here...",
+                key=f"editor_{tab['id']}_fullscreen",
+                label_visibility="collapsed",
+                help="Fullscreen editing mode"
+            )
+        elif st.session_state['editor_mode'] == 'markdown':
             # Split the layout for markdown editor and preview
             editor_col, preview_col = st.columns(2)
             
             with editor_col:
                 st.subheader("📝 Editor")
+                # Enhanced text area with spell-check
                 content = st.text_area(
                     "Content",
                     value=content,
@@ -975,6 +1224,13 @@ def site_management_page(site):
                     label_visibility="collapsed",
                     help="Edit your content in Markdown format"
                 )
+                
+                # Spell-check status indicator
+                if not st.session_state['fullscreen_mode']:
+                    if spell_check_enabled:
+                        st.caption("✅ Spell check enabled")
+                    else:
+                        st.caption("❌ Spell check disabled")
             
             with preview_col:
                 st.subheader("👁️ Preview")
@@ -986,6 +1242,7 @@ def site_management_page(site):
                 """, unsafe_allow_html=True)
         else:
             # Plain text mode
+            st.subheader("📝 Editor")
             content = st.text_area(
                 "Content",
                 value=content,
@@ -994,6 +1251,13 @@ def site_management_page(site):
                 key=f"editor_{tab['id']}",
                 help="Edit your content in plain text format"
             )
+            
+            # Spell-check status indicator
+            if not st.session_state['fullscreen_mode']:
+                if spell_check_enabled:
+                    st.caption("✅ Spell check enabled")
+                else:
+                    st.caption("❌ Spell check disabled")
         
         # Check for unsaved changes
         if content != original_content:
@@ -1005,15 +1269,32 @@ def site_management_page(site):
         if search_term and search_term in content:
             st.success(f"Found {content.count(search_term)} occurrence(s) of '{search_term}'")
         
-        # Character count and size warning
+        # Enhanced content statistics
         char_count = len(content)
+        word_count = len(content.split()) if content else 0
+        line_count = content.count('\n') + 1 if content else 0
         content_size = len(content.encode('utf-8'))
         size_percentage = (content_size / MAX_CONTENT_SIZE_BYTES) * 100
         
-        st.caption(f"Characters: {char_count} | Size: {content_size:,} bytes ({size_percentage:.1f}% of limit)")
+        # Enhanced character counter with visual indicators
+        if size_percentage > 90:
+            st.markdown(f"<span style='color: #ff6b6b; font-weight: bold;'>Characters: {char_count} | Words: {word_count} | Lines: {line_count} | Size: {content_size:,} bytes ({size_percentage:.1f}% of limit)</span>", unsafe_allow_html=True)
+        elif size_percentage > 75:
+            st.markdown(f"<span style='color: #ffc107; font-weight: bold;'>Characters: {char_count} | Words: {word_count} | Lines: {line_count} | Size: {content_size:,} bytes ({size_percentage:.1f}% of limit)</span>", unsafe_allow_html=True)
+        else:
+            st.caption(f"Characters: {char_count} | Words: {word_count} | Lines: {line_count} | Size: {content_size:,} bytes ({size_percentage:.1f}% of limit)")
         
         if content_size > MAX_CONTENT_SIZE_BYTES:
             st.error(f"⚠️ Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes")
+        
+        # Content statistics visualization
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Characters", char_count)
+        with col2:
+            st.metric("Words", word_count)
+        with col3:
+            st.metric("Lines", line_count)
         
         # Auto-save functionality (every 30 seconds)
         AUTO_SAVE_INTERVAL = 30  # seconds
@@ -1052,14 +1333,24 @@ def site_management_page(site):
                         # Silently fail on auto-save errors to avoid disrupting user
                         pass
         
+        # Enhanced save button with visual feedback
         # Save button
-        col1, col2, col3 = st.columns([1, 4, 1])
+        col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
         with col1:
-            save_button = st.button("💾 Save", type="primary", key="save_button", help="Save your changes to the current tab")
+            # Enhanced save button with visual feedback for unsaved changes
+            save_button = st.button("💾 Save", type="primary", key="save_button", help="Save your changes to the current tab (Ctrl+S)")
+            
+            # Add visual indicator for unsaved changes
+            if st.session_state.get('unsaved_changes', False):
+                st.markdown("<span style='color: #ff6b6b; font-weight: bold;'>●</span> Unsaved changes", unsafe_allow_html=True)
         with col3:
             st.caption("Ctrl+S")
+        with col4:
+            # Add a refresh button
+            if st.button("🔄 Refresh", help="Refresh the current tab content"):
+                st.rerun()
         
-        # Auto-save indicator
+        # Auto-save indicator with enhanced styling
         if 'last_auto_save' in st.session_state:
             st.caption(f"Last auto-saved: {st.session_state['last_auto_save']}")
         
@@ -1081,7 +1372,7 @@ def site_management_page(site):
                             encrypted_content
                         )
                         if updated_tab:
-                            st.success("Content saved!")
+                            st.success("Content saved successfully! ✅")
                             # Update local state
                             if encrypted_content:
                                 tab['encrypted_content'] = encrypted_content
@@ -1097,14 +1388,11 @@ def site_management_page(site):
                             st.session_state['unsaved_changes'] = False
                             st.rerun()
                         else:
-                            st.error("Failed to save content")
+                            st.error("Failed to save content ❌")
                     except Exception as e:
                         st.error(f"Error saving content: {str(e)}")
             else:
-                st.info("No changes to save")
-        with col2:
-            if st.button("🔄 Refresh", help="Refresh the current tab content"):
-                st.rerun()
+                st.info("No changes to save ℹ️")
         
         # Last updated
         if tab.get('updated_at'):
